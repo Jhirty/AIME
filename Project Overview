@@ -1,0 +1,164 @@
+AI Marketing Intelligence Engine
+Project Overview
+A fractional marketing knowledge and automation system, built by Josie Hirtenstein for brand JH Marketing Draft v0.1 — living document, evolves alongside the knowledge base (KB).
+
+
+1. Why This Exists (Objectives)
+Over 20 years working inside businesses, the same pattern keeps recurring: when marketing has ready access to accurate business information, it moves fast and produces meaningfully better work. AIME exists to make that access the default — for clients, and for this practice.
+
+What AIME makes possible, topic by topic:
+
+Visible value — customer outcomes, project impact, and value derived from work become documented and accessible, so marketing can tell these stories with confidence, backed by proof rather than assumption.
+Real-time product/release awareness — product lifecycle and release timing feed directly into the KB, so announcements are planned with confidence rather than rushed, protecting momentum across every other project.
+Unified reporting — attribution and performance data are pulled into one place in real time, replacing what used to be a day's work each month with an always-current view.
+Cross-team visibility, built in across:
+Communications — press, PR, and case studies available at everyone's fingertips
+Project status — social, events, design, and website activity visible and connected
+Content creation — direct access to sales conversations, product context, and real customer/solution use cases
+Sales enablement — materials always current against the latest product, customer, and comms intelligence
+Events management — one consistent system, guidelines, and process across every event type (expos, sponsorships, industry events, hackathons, C-suite dinners, breakfast briefings, networking)
+Outbound — integrated campaigns and content syndication working from the same shared picture
+Prospecting — data stack connected cleanly to outreach tools across LinkedIn, email, and social
+Inbound — advertising, website, blogs, video, and papers all feeding back into a shared understanding of what's working
+Faster research — competitor and industry intelligence on hand, so marketing decisions can be made quickly and with confidence.
+
+[Space to add further business reasons as they surface through client work.]
+
+Why this approach specifically: ready access to accurate business information means marketing can move fast and produce meaningfully higher-quality work — better-informed content, faster response to product changes, campaigns grounded in real customer outcomes rather than guesswork. AIME is the infrastructure that makes that the default, not the exception.
+
+Personal objective, alongside the client one: this project is also how this practice builds and demonstrates a repeatable, agentic marketing capability — a genuine asset to bring into every future fractional engagement, not a one-off client tool.
+
+
+2. ROI — Why This Is Worth Building
+ROI here works on two levels: value delivered within a client engagement, and value this practice builds across engagements.
+
+Within a client engagement:
+
+Time recovered from manual reporting, searching for information, and chasing context across teams
+Faster turnaround on content and campaigns because the underlying facts (product, customer, proof points) are already structured and accessible
+Higher-quality output — messaging grounded in real case studies and value data rather than generic claims
+Reduced risk of stalled projects or last-minute panic caused by late information
+More consistent brand voice and messaging across everyone touching marketing output, human or AI
+
+Across the practice (the freelance/fractional angle):
+
+The KB structure, agent framework, and workflow patterns built here are reusable — each new client engagement starts from a proven system rather than from scratch
+Demonstrable AI-marketing capability becomes a differentiator when pitching new fractional work
+Time invested now in getting the framework right is time saved on every future client build
+
+Cost side of the ROI equation: kept deliberately low during this build phase — self-hosted n8n, free-tier tools, and pay-as-you-go API usage rather than fixed subscriptions, so the investment stays proportionate until there's a live client engagement to justify scaling up.
+
+
+3. The Framework
+This project takes its structure from Dedicatted's AIMEE architecture (from the Episode 1 training material), adapted to a solo fractional practice rather than an internal enterprise platform. Dedicatted's version runs on React/Tailwind (Lovable) and Supabase with a full multi-agent frontend; this build uses a leaner stack suited to a one-person operation, while keeping the same four-layer logic.
+
+The four layers:
+
+Layer
+Dedicatted's version
+This build
+Frontend
+Custom React app (Content Hub, Nurture, Campaigns, Video, Management pages)
+n8n workflows + chat trigger, no custom frontend needed at this stage
+Agents
+Sebastian (content), Genesis (nurture), Nova (campaigns), Scout (intel), Aria (events), ORACLE (validation)
+Same conceptual roles, built one at a time as n8n workflows — starting with a content agent
+Backend / KB
+Supabase (Postgres + Edge Functions), 16+ shared KB sections
+GitHub repo (KB as version-controlled markdown) — see §4
+AI engine
+Anthropic Claude API + Perplexity
+Anthropic Claude API (Haiku to start, cost-controlled)
+Integrations
+ClickUp, HubSpot, Meta/Google/LinkedIn Ads via MCP
+Added incrementally per channel or client need. Do not built until there's a live use case.
+
+
+Why this scaled-down version still works: Dedicatted's architecture is built for an internal team managing many simultaneous clients and channels. A fractional practice doesn't need that scale on day one — the same logic (shared KB, specialised agents, human approval before anything goes live) holds at a much smaller footprint, and can grow toward the fuller architecture as client volume justifies it.
+
+One structural principle carried over directly: in Dedicatted's model, "Claude and the KB are shared by all" — every agent draws from the same knowledge base rather than holding its own copy. This is the single most important design decision to get right early, and is addressed directly in §4 below.
+
+
+4. Infrastructure — What's Right, What Needs Adjusting
+Reviewing the current toolset against best practice for a KB-driven, multi-agent system:
+Docker + n8n (local)
+Verdict: good choice, keep it. Free, full control, no vendor lock-in, and appropriate for the current build/test phase. Two things worth being deliberate about as this grows:
+
+Backups — a local Docker container has no automatic backup. Worth exporting workflow JSON regularly (as we've been doing) and keeping them version-controlled (see GitHub, below) rather than relying solely on the container's internal state.
+Availability — local n8n only runs while your machine is on and Docker is running. Fine for building/testing; if this needs to run on a schedule or be reachable remotely later (e.g. for approvals), that's a future decision, not one to make now.
+Claude — Pro & API (important distinction)
+Worth being precise here, since these are two separate products serving different purposes:
+
+Claude Pro is the subscription level to the claude.ai chat interface — useful for manually testing prompts (as we did to validate the system prompt), drafting, and general work. It does not connect to n8n and does not provide API credits.
+The Claude API (via console.anthropic.com / platform.claude.com) is what n8n actually needs to run AIME workflows — billed separately, pay-as-you-go, per token. Recommendation: no need to move to Claude Pro for this project specifically — it doesn't power the automation. If Pro's chat features are useful for your own day-to-day drafting work outside n8n, that's a separate, valid reason to consider it, but it's not an AIME infrastructure requirement.
+GitHub
+Verdict: underused right now, and it's the piece that solves your KB versioning problem. GitHub is used as for website CMS/Cloudflare — the same repo pattern is the natural home for the KB itself:
+
+Store the KB as version-controlled markdown files in a GitHub repo
+n8n fetches the current KB via an HTTP Request node pointing at the raw file URL, rather than the content being pasted/hardcoded into a Set node
+Update the KB once, in one place, with a visible history of every change — every agent picks up the latest version on its next run
+This directly resolves the "locally stored in the workflow" concern raised earlier in this project — GitHub is a stronger, free answer to that than Notion for this specific purpose, precisely because it's built for versioned text content
+Cloudflare
+Verdict: not directly part of AIME's build, but a natural home for outputs later. 
+Free hosting for the website is unrelated to the marketing engine itself, but once AIME is generating finished content (blog posts, case studies, landing pages), Cloudflare Pages is a sensible, already-in-place destination for publishing that output — worth keeping in mind for a later phase, not something to wire up now.
+Summary recommendation
+Tool
+Role in AIME
+Action
+Docker + n8n
+Workflow engine
+Keep as-is; start backing up workflow JSON via GitHub
+Claude API
+AI generation
+Use pay-as-you-go credits, Haiku model, not Pro
+Claude Pro
+Personal chat/drafting only
+Optional, unrelated to AIME automation
+GitHub
+KB storage (new role)
+Move KB from hardcoded n8n text into a version-controlled repo
+Cloudflare
+Future output hosting
+No action needed yet
+
+
+
+5. How This Gets Stored, Managed, and Shared
+KB (Knowledge Base): lives in a GitHub repo as markdown, one section per file or one master file — single source of truth, fetched live by n8n rather than duplicated across workflows.
+Workflows: built and tested in n8n, exported as JSON and committed to GitHub alongside the KB for backup and version history.
+Drafts/outputs: saved locally via the Read/Write File node (Docker volume mounted to a real folder) pending a proper review/approval step.
+This overview document: the reference point for what AIME is and why — updated as the KB and framework evolve, so it stays useful both for your own clarity and as something client-facing if ever needed to explain the system.
+
+
+6. Cost Centre, Budget & Finance Management (Future Addition)
+Alongside the marketing engine itself, AIME will eventually include a financial management layer — separate in purpose from the marketing KB, but part of the same overall system. This is flagged here as a planned addition, not something to build yet.
+
+What this will cover, once added:
+
+Client billing — tracking time/deliverables per client engagement, feeding into invoicing
+Budget management — visibility over AIME's own running costs (API usage, tooling) alongside broader practice budgeting
+Tax and National Insurance considerations — keeping the figures needed for self-assessment and NI organised and accessible
+
+Note: this document can help organise and surface the relevant figures, but isn't a substitute for advice from an accountant — worth treating tax/NI specifics as a professional-advice matter when the time comes, not something to automate blindly.
+
+The important open question — where this data lives: Financial and billing data is a different sensitivity tier to the marketing KB, and shouldn't default to the same storage. Before building this out, it's worth deliberately validating:
+
+Whether a GitHub repo (even private) is appropriate for anything containing client billing detail or personal financial data, or whether this needs a more access-controlled tool (e.g. a dedicated accounting platform, or an encrypted/private store separate from the marketing-facing infrastructure)
+Who else, if anyone, might ever need access — versus the marketing KB, which is designed to be shared across agents and potentially clients
+What UK data protection obligations apply, given this would include personal financial information
+
+Action for now: treat this as a placeholder in the framework rather than a build task — worth revisiting once the marketing side of AIME is stable, at which point the storage question above should be resolved before any financial data is added.
+
+
+7. Suggested Next Steps
+Set up a GitHub repo for the KB (can sit alongside or separate from the website repo)
+Migrate the current KB markdown into that repo
+Update the n8n "Inject KB + Prompt" node to fetch from GitHub via HTTP Request instead of pasted text
+Continue building the first agent (content writer) end-to-end with this proper KB connection in place
+Revisit this overview document once messaging/value props and the Trust/Security/Identity persona are finalised
+Come back to the cost centre/finance layer (§6) once the marketing side is stable, starting with the storage question
+
+
+
+This document is a working reference, not a final specification — expect it to change as AIME, the KB, and this practice's client work develop together.
+
