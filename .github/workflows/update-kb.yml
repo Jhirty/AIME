@@ -1,0 +1,25 @@
+name: Update AI Agent KB
+
+on:
+  push:
+    paths:
+      - 'kb/**'  # Trigger when KB files change
+    branches:
+      - main  # Change to your default branch
+
+jobs:
+  notify-n8n:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Trigger n8n workflow
+        run: |
+          curl -X POST ${{ secrets.N8N_WEBHOOK_URL }} \
+            -H "Content-Type: application/json" \
+            -d '{
+              "branch": "${{ github.ref }}",
+              "commit": "${{ github.sha }}",
+              "repository": "${{ github.repository }}"
+            }'
